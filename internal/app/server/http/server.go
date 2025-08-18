@@ -1,43 +1,43 @@
 package http
 
 import (
+	"github.com/aseptimu/GophKeeper/internal/app/config"
 	"github.com/aseptimu/GophKeeper/internal/app/middleware"
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
+	"log/slog"
 	"net/http"
 )
 
-type Server struct {
-	router *chi.Mux
+type Registrer interface {
+	RegisterRoutes(r chi.Router)
 }
 
-func NewServer() *Server {
-	router := &Server{
+type Server struct {
+	router *chi.Mux
+	config *config.AppConfig
+}
+
+func NewServer(config *config.AppConfig, routes ...Registrer) *Server {
+	server := &Server{
 		router: chi.NewRouter(),
+		config: config,
 	}
-	router.registerMiddlewares()
-	router.registerRoutes()
-	return router
+	server.registerMiddlewares()
+	for _, reg := range routes {
+		reg.RegisterRoutes(server.router)
+	}
+	return server
 }
 
 func (s *Server) registerMiddlewares() {
 	s.router.Use(chimiddleware.Logger)
-	s.router.Use(middleware.Auth)
-}
-
-func (s *Server) registerRoutes() {
-	s.router.Get("/", s.handleRoot)
-	s.router.Get("/auth/refresh", s.handleRoot)
+	s.router.Use(middleware.Auth([]byte(s.config.JWTKey)))
 }
 
 func (s *Server) Run() {
-	http.ListenAndServe(":8087", s.router)
-}
-
-func (s *Server) handleRoot(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello, World!"))
-}
-
-func (s *Server) handleRefreshToken(w http.ResponseWriter, r *http.Request) {
-
+	err := http.ListenAndServe(s.config.ServerAddress, s.router)
+	if err != nil {
+		slog.Error("Server failure", "error", err)
+	}
 }

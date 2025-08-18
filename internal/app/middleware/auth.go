@@ -5,15 +5,19 @@ import (
 	"net/http"
 )
 
-func Auth(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		t := jwt.New(jwt.SigningMethodHS256)
-		s, _ := t.SignedString([]byte("test"))
-		w.Header().Add("Content-Type", "application/json")
-		http.SetCookie(w, &http.Cookie{
-			Name:  "access_token",
-			Value: s,
+func Auth(hmacKey []byte) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			t := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+				"userId": "1",
+			})
+			s, _ := t.SignedString(hmacKey)
+			w.Header().Add("Content-Type", "application/json")
+			http.SetCookie(w, &http.Cookie{
+				Name:  "access_token",
+				Value: s,
+			})
+			next.ServeHTTP(w, r)
 		})
-		next.ServeHTTP(w, r)
-	})
+	}
 }
