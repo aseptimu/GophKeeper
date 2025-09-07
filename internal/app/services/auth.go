@@ -3,12 +3,14 @@ package services
 import (
 	"context"
 	"errors"
-	"github.com/aseptimu/GophKeeper/internal/app/config"
-	"github.com/aseptimu/GophKeeper/internal/app/models"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 	"log/slog"
 	"time"
+
+	"github.com/aseptimu/GophKeeper/internal/app/config"
+	"github.com/aseptimu/GophKeeper/internal/app/models"
+	"github.com/aseptimu/GophKeeper/internal/app/store"
+	"github.com/golang-jwt/jwt/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 const tokenExpirationTime = time.Hour * 72
@@ -37,7 +39,7 @@ func (s *AuthService) RegisterUser(ctx context.Context, login, password string) 
 	}
 
 	existingUser, err := s.store.GetUserByLogin(ctx, login)
-	if err != nil && !errors.Is(err, ErrUserNotFound) {
+	if err != nil && !errors.Is(err, store.ErrUserNotFound) {
 		return "", err
 	}
 	if existingUser != nil {
@@ -45,6 +47,9 @@ func (s *AuthService) RegisterUser(ctx context.Context, login, password string) 
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
 
 	user := &models.User{
 		Login:          login,
@@ -70,6 +75,11 @@ func (s *AuthService) Login(ctx context.Context, login, password string) (string
 	user, err := s.store.GetUserByLogin(ctx, login)
 	if err != nil {
 		return "", err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(password))
+	if err != nil {
+		return "", ErrInvalidPassword
 	}
 
 	token, err := s.generateToken(user.ID, s.cfg.JWTKey)

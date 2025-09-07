@@ -25,6 +25,7 @@ type AppConfig struct {
 	DSN           string `env:"DATABASE_DSN"`
 	JWTKey        string `env:"JWT_KEY"`
 	MigrationsDir string `env:"MIGRATIONS_DIR"`
+	FilesDir      string `env:"FILES_DIR" envDefault:"./files"`
 }
 
 func NewAppConfig() (*AppConfig, error) {

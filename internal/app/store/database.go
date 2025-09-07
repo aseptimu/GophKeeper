@@ -33,3 +33,7 @@ func NewDBStore(ctx context.Context, dsn string) (*DBStore, error) {
 func (db *DBStore) Ping(ctx context.Context) error {
 	return db.pool.Ping(ctx)
 }
+
+func (db *DBStore) Pool() *pgxpool.Pool {
+	return db.pool
+}

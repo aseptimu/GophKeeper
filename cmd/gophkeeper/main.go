@@ -2,14 +2,15 @@ package main
 
 import (
 	"context"
+	"log/slog"
+	"os/signal"
+	"syscall"
+
 	"github.com/aseptimu/GophKeeper/internal/app/config"
 	"github.com/aseptimu/GophKeeper/internal/app/handlers"
 	"github.com/aseptimu/GophKeeper/internal/app/server/http"
 	"github.com/aseptimu/GophKeeper/internal/app/services"
 	"github.com/aseptimu/GophKeeper/internal/app/store"
-	"log/slog"
-	"os/signal"
-	"syscall"
 )
 
 func main() {
@@ -40,7 +41,17 @@ func main() {
 	}
 
 	authService := services.NewAuthService(appConfig, dbStore)
+	dataStore := store.NewDataStore(dbStore.Pool())
+
+	fileStorage, err := store.NewFileStorage(appConfig.FilesDir)
+	if err != nil {
+		slog.Error("Failed to create file storage", "err", err)
+		return
+	}
+
+	dataService := services.NewDataService(dataStore, fileStorage)
 
 	authHandler := handlers.NewAuthHandler(authService)
-	http.NewServer(appConfig, authHandler).Run()
+	dataHandler := handlers.NewDataHandler(dataService)
+	http.NewServer(appConfig, authHandler, dataHandler).Run()
 }

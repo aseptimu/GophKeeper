@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"github.com/aseptimu/GophKeeper/internal/app/services"
-	"github.com/go-chi/chi/v5"
 	"net/http"
+
+	"github.com/aseptimu/GophKeeper/internal/app/services"
+	"github.com/aseptimu/GophKeeper/internal/app/store"
+	"github.com/go-chi/chi/v5"
 )
 
 type AuthUser interface {
@@ -49,8 +51,11 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, services.ErrEmptyCredentials):
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
-		case errors.Is(err, services.ErrUserNotFound):
+		case errors.Is(err, store.ErrUserNotFound):
 			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		case errors.Is(err, services.ErrInvalidPassword):
+			http.Error(w, err.Error(), http.StatusUnauthorized)
 			return
 		default:
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -59,7 +64,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:  "",
+		Name:  "token",
 		Value: token,
 	})
 }
@@ -87,7 +92,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:  "",
+		Name:  "token",
 		Value: token,
 	})
 }
