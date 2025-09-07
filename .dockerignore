@@ -1,0 +1,15 @@
+.git
+.gitignore
+.idea
+*.iml
+node_modules
+bin
+dist
+build
+.env
+*.local
+**/*.log
+**/__pycache__
+**/.DS_Store
+
+

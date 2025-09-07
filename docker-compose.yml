@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: gophkeeper-db
+    environment:
+      POSTGRES_DB: gophkeeper
+      POSTGRES_USER: gk_user
+      POSTGRES_PASSWORD: gk_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gk_user -d gophkeeper"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gophkeeper-app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8087:8087"
+    env_file:
+      - .env
+    environment:
+      DATABASE_DSN: postgres://gk_user:gk_password@db:5432/gophkeeper?sslmode=disable
+      SERVER_ADDRESS: 0.0.0.0:8087
+      MIGRATIONS_DIR: /app/db/migrations
+    volumes:
+      - ./:/app:ro
+
+volumes:
+  db_data:
+
+
