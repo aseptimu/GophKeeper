@@ -3,11 +3,12 @@ package config
 import (
 	"errors"
 	"flag"
+	"log/slog"
+	"time"
+
 	"github.com/aseptimu/GophKeeper/internal/app/utils"
 	"github.com/caarlos0/env/v11"
 	_ "github.com/joho/godotenv/autoload"
-	"log/slog"
-	"time"
 )
 
 var (

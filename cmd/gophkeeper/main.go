@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log/slog"
 	"os/signal"
 	"syscall"
@@ -13,7 +15,22 @@ import (
 	"github.com/aseptimu/GophKeeper/internal/app/store"
 )
 
+var (
+	version   = "dev"
+	buildTime = "unknown"
+	gitCommit = "unknown"
+	goVersion = "unknown"
+)
+
 func main() {
+	versionFlag := flag.Bool("version", false, "Show version information")
+	flag.Parse()
+
+	if *versionFlag {
+		showVersion()
+		return
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
@@ -54,4 +71,12 @@ func main() {
 	authHandler := handlers.NewAuthHandler(authService)
 	dataHandler := handlers.NewDataHandler(dataService)
 	http.NewServer(appConfig, authHandler, dataHandler).Run()
+}
+
+func showVersion() {
+	fmt.Printf("GophKeeper Server\n")
+	fmt.Printf("Version: %s\n", version)
+	fmt.Printf("Build Time: %s\n", buildTime)
+	fmt.Printf("Git Commit: %s\n", gitCommit)
+	fmt.Printf("Go Version: %s\n", goVersion)
 }

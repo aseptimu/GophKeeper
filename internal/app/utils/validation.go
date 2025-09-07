@@ -1,3 +1,4 @@
+// Package utils provides utility functions for data validation and other common operations.
 package utils
 
 import (
@@ -8,11 +9,16 @@ import (
 )
 
 var (
+	// ErrInvalidCardNumber is returned when a bank card number is invalid.
 	ErrInvalidCardNumber = errors.New("invalid card number")
+	// ErrInvalidExpiryDate is returned when a card expiry date is invalid.
 	ErrInvalidExpiryDate = errors.New("invalid expiry date")
-	ErrInvalidCVV        = errors.New("invalid CVV")
+	// ErrInvalidCVV is returned when a card CVV is invalid.
+	ErrInvalidCVV = errors.New("invalid CVV")
 )
 
+// ValidateBankCard validates all components of a bank card.
+// It checks the card number using Luhn algorithm, expiry date format, and CVV format.
 func ValidateBankCard(cardNumber, expiryDate, cvv string) error {
 	if err := ValidateCardNumber(cardNumber); err != nil {
 		return err
@@ -29,6 +35,8 @@ func ValidateBankCard(cardNumber, expiryDate, cvv string) error {
 	return nil
 }
 
+// ValidateCardNumber validates a bank card number using the Luhn algorithm.
+// It accepts card numbers with spaces and dashes, which are automatically removed.
 func ValidateCardNumber(cardNumber string) error {
 	cardNumber = strings.ReplaceAll(cardNumber, " ", "")
 	cardNumber = strings.ReplaceAll(cardNumber, "-", "")
@@ -48,7 +56,13 @@ func ValidateCardNumber(cardNumber string) error {
 	return nil
 }
 
+// LuhnCheck implements the Luhn algorithm to validate credit card numbers.
+// Returns true if the card number is valid according to the Luhn algorithm.
 func LuhnCheck(cardNumber string) bool {
+	if len(cardNumber) == 0 {
+		return false
+	}
+
 	sum := 0
 	alternate := false
 
@@ -72,6 +86,8 @@ func LuhnCheck(cardNumber string) bool {
 	return sum%10 == 0
 }
 
+// ValidateExpiryDate validates a card expiry date in MM/YY format.
+// Month must be between 01-12, year must be between 00-99.
 func ValidateExpiryDate(expiryDate string) error {
 	if !regexp.MustCompile(`^\d{2}/\d{2}$`).MatchString(expiryDate) {
 		return ErrInvalidExpiryDate
@@ -91,6 +107,8 @@ func ValidateExpiryDate(expiryDate string) error {
 	return nil
 }
 
+// ValidateCVV validates a card CVV (Card Verification Value).
+// CVV must be 3 or 4 digits.
 func ValidateCVV(cvv string) error {
 	if !regexp.MustCompile(`^\d{3,4}$`).MatchString(cvv) {
 		return ErrInvalidCVV

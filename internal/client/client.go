@@ -1,3 +1,4 @@
+// Package client provides a client for interacting with the GophKeeper server.
 package client
 
 import (
@@ -10,70 +11,82 @@ import (
 	"time"
 )
 
+// Client represents a client connection to the GophKeeper server.
 type Client struct {
-	serverAddr string
-	httpClient *http.Client
-	token      string
+	serverAddr string       // Address of the GophKeeper server
+	httpClient *http.Client // HTTP client for making requests
+	token      string       // JWT token for authentication
 }
 
+// User represents user credentials for authentication.
 type User struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	Login    string `json:"login"`    // User's login/username
+	Password string `json:"password"` // User's password
 }
 
+// DataItem represents a piece of user data stored on the server.
 type DataItem struct {
-	ID        string    `json:"id"`
-	UserID    string    `json:"user_id"`
-	Type      string    `json:"type"`
-	Data      string    `json:"data"`
-	Metadata  string    `json:"metadata"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string    `json:"id"`         // Unique identifier for the data item
+	UserID    string    `json:"user_id"`    // ID of the user who owns this data
+	Type      string    `json:"type"`       // Type of data (login_password, text, binary, bank_card)
+	Data      string    `json:"data"`       // The actual data content
+	Metadata  string    `json:"metadata"`   // Optional metadata describing the data
+	CreatedAt time.Time `json:"created_at"` // When the item was created
+	UpdatedAt time.Time `json:"updated_at"` // When the item was last updated
 }
 
+// DataItemsResponse represents the response containing multiple data items.
 type DataItemsResponse struct {
-	Items []*DataItem `json:"items"`
+	Items []*DataItem `json:"items"` // List of data items
 }
 
+// DataItemResponse represents the response containing a single data item.
 type DataItemResponse struct {
-	Item *DataItem `json:"item"`
+	Item *DataItem `json:"item"` // The data item
 }
 
+// CreateDataItemRequest represents a request to create a new data item.
 type CreateDataItemRequest struct {
-	Type     string `json:"type"`
-	Data     string `json:"data"`
-	Metadata string `json:"metadata"`
+	Type     string `json:"type"`     // Type of data to create
+	Data     string `json:"data"`     // The data content
+	Metadata string `json:"metadata"` // Optional metadata
 }
 
+// LoginPasswordData represents login and password information.
 type LoginPasswordData struct {
-	Login    string `json:"login"`
-	Password string `json:"password"`
+	Login    string `json:"login"`    // Username or login identifier
+	Password string `json:"password"` // Password for the login
 }
 
+// BankCardData represents bank card information.
 type BankCardData struct {
-	CardNumber string `json:"card_number"`
-	ExpiryDate string `json:"expiry_date"`
-	CVV        string `json:"cvv"`
-	Cardholder string `json:"cardholder"`
+	CardNumber string `json:"card_number"` // Bank card number
+	ExpiryDate string `json:"expiry_date"` // Card expiry date in MM/YY format
+	CVV        string `json:"cvv"`         // Card verification value
+	Cardholder string `json:"cardholder"`  // Name of the cardholder
 }
 
+// TextData represents arbitrary text data.
 type TextData struct {
-	Text string `json:"text"`
+	Text string `json:"text"` // The text content
 }
 
+// BinaryData represents information about a binary file.
 type BinaryData struct {
-	FilePath    string `json:"file_path"`
-	ContentType string `json:"content_type"`
-	FileName    string `json:"file_name"`
-	FileSize    int64  `json:"file_size"`
+	FilePath    string `json:"file_path"`    // Path to the stored file
+	ContentType string `json:"content_type"` // MIME type of the file
+	FileName    string `json:"file_name"`    // Original filename
+	FileSize    int64  `json:"file_size"`    // Size of the file in bytes
 }
 
+// BinaryDataRequest represents a request to create binary data.
 type BinaryDataRequest struct {
-	Data        []byte `json:"data"`
-	ContentType string `json:"content_type"`
-	FileName    string `json:"file_name"`
+	Data        []byte `json:"data"`         // The binary data
+	ContentType string `json:"content_type"` // MIME type of the data
+	FileName    string `json:"file_name"`    // Original filename
 }
 
+// NewClient creates a new client instance for connecting to the GophKeeper server.
 func NewClient(serverAddr string) *Client {
 	return &Client{
 		serverAddr: serverAddr,
@@ -82,6 +95,8 @@ func NewClient(serverAddr string) *Client {
 	}
 }
 
+// Register registers a new user with the server.
+// Returns an error if registration fails.
 func (c *Client) Register(login, password string) error {
 	user := User{
 		Login:    login,
@@ -91,6 +106,8 @@ func (c *Client) Register(login, password string) error {
 	return c.makeAuthRequest("/auth/register", user)
 }
 
+// Login authenticates a user with the server.
+// Returns an error if authentication fails.
 func (c *Client) Login(login, password string) error {
 	user := User{
 		Login:    login,
@@ -100,14 +117,17 @@ func (c *Client) Login(login, password string) error {
 	return c.makeAuthRequest("/auth/login", user)
 }
 
+// Logout clears the authentication token.
 func (c *Client) Logout() {
 	c.token = ""
 }
 
+// IsAuthenticated returns true if the client has a valid authentication token.
 func (c *Client) IsAuthenticated() bool {
 	return c.token != ""
 }
 
+// SetToken sets the authentication token for the client.
 func (c *Client) SetToken(token string) {
 	c.token = token
 }

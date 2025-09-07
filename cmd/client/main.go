@@ -14,15 +14,28 @@ import (
 	"golang.org/x/term"
 )
 
+var (
+	version   = "dev"
+	buildTime = "unknown"
+	gitCommit = "unknown"
+	goVersion = "unknown"
+)
+
 func main() {
 	var (
-		serverAddr = flag.String("server", "127.0.0.1:8087", "Server address")
-		help       = flag.Bool("help", false, "Show help")
+		serverAddr  = flag.String("server", "127.0.0.1:8087", "Server address")
+		help        = flag.Bool("help", false, "Show help")
+		versionFlag = flag.Bool("version", false, "Show version information")
 	)
 	flag.Parse()
 
 	if *help {
 		showHelp()
+		return
+	}
+
+	if *versionFlag {
+		showVersion()
 		return
 	}
 
@@ -330,6 +343,14 @@ func handleLogout(clientApp *client.Client) {
 	showAuthMenu(clientApp)
 }
 
+func showVersion() {
+	fmt.Printf("GophKeeper Client\n")
+	fmt.Printf("Version: %s\n", version)
+	fmt.Printf("Build Time: %s\n", buildTime)
+	fmt.Printf("Git Commit: %s\n", gitCommit)
+	fmt.Printf("Go Version: %s\n", goVersion)
+}
+
 func showHelp() {
 	fmt.Println("GophKeeper Interactive Client")
 	fmt.Println("Usage: client [flags]")
@@ -339,6 +360,8 @@ func showHelp() {
 	fmt.Println("        Server address (default \"127.0.0.1:8087\")")
 	fmt.Println("  -help")
 	fmt.Println("        Show this help message")
+	fmt.Println("  -version")
+	fmt.Println("        Show version information")
 	fmt.Println()
 	fmt.Println("The client will start in interactive mode and guide you through")
 	fmt.Println("authentication and data management.")
@@ -346,4 +369,5 @@ func showHelp() {
 	fmt.Println("Examples:")
 	fmt.Println("  client")
 	fmt.Println("  client -server localhost:8080")
+	fmt.Println("  client -version")
 }

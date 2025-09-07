@@ -12,12 +12,19 @@ import (
 	"github.com/aseptimu/GophKeeper/internal/app/utils"
 )
 
-type DataService struct {
-	store       store.DataStore
-	fileStorage *store.FileStorage
+type FileStorage interface {
+	SaveFile(data []byte, fileName string) (string, error)
+	GetFile(filePath string) ([]byte, error)
+	DeleteFile(filePath string) error
+	GetFileSize(filePath string) (int64, error)
 }
 
-func NewDataService(store store.DataStore, fileStorage *store.FileStorage) *DataService {
+type DataService struct {
+	store       store.DataStore
+	fileStorage FileStorage
+}
+
+func NewDataService(store store.DataStore, fileStorage FileStorage) *DataService {
 	return &DataService{
 		store:       store,
 		fileStorage: fileStorage,
